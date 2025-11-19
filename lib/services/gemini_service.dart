@@ -1,0 +1,244 @@
+import 'dart:io';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/symptom.dart';
+import '../models/diagnosis_result.dart';
+
+class GeminiService {
+  late final GenerativeModel _model;
+  late final ChatSession _chatSession;
+
+  GeminiService() {
+    // Initialize the Gemini model
+    final apiKey = dotenv.env['GEMINI_API_KEY'];
+
+    if (apiKey == null || apiKey.isEmpty) {
+      throw Exception('GEMINI_API_KEY not found in .env file');
+    }
+
+    // Use gemini-1.5-flash for faster, cost-effective responses
+    _model = GenerativeModel(
+      model: 'gemini-1.5-flash',
+      apiKey: apiKey,
+      generationConfig: GenerationConfig(
+        temperature: 0.7, // Balanced creativity and accuracy
+        topK: 40,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      ),
+      safetySettings: [
+        SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium),
+      ],
+    );
+
+    // Initialize chat session for conversational context
+    _chatSession = _model.startChat(history: []);
+  }
+
+  /// Analyzes symptoms and returns a diagnosis
+  Future<DiagnosisResult> analyzeSymptomsbasic(List<Symptom> symptoms) async {
+    try {
+      // Build the prompt
+      final prompt = _buildDiagnosisPrompt(symptoms);
+
+      // Send to Gemini AI
+      final response = await _model.generateContent([Content.text(prompt)]);
+
+      // Extract text from response
+      final aiResponse = response.text ?? 'No response generated';
+
+      // Parse and return result
+      return DiagnosisResult.fromAIResponse(aiResponse);
+    } catch (e) {
+      throw Exception('Failed to analyze symptoms: $e');
+    }
+  }
+
+  /// Transcribes audio to text using Gemini
+  Future<String> transcribeAudio(String audioPath) async {
+    try {
+      // Read audio file as bytes
+      final audioFile = File(audioPath);
+      final audioBytes = await audioFile.readAsBytes();
+
+      // Create audio content
+      final audioPart = DataPart('audio/mp4', audioBytes);
+
+      // Send to Gemini with prompt
+      final prompt = '''
+Please transcribe the following audio recording. 
+The audio contains a description of medical symptoms.
+Provide only the transcription, without any additional commentary.
+''';
+
+      final response = await _model.generateContent([
+        Content.multi([TextPart(prompt), audioPart]),
+      ]);
+
+      return response.text ?? 'Unable to transcribe audio';
+    } catch (e) {
+      throw Exception('Failed to transcribe audio: $e');
+    }
+  }
+
+  /// Analyzes symptoms from audio transcription
+  Future<DiagnosisResult> analyzeSymptomsFromAudio(String audioPath) async {
+    try {
+      // First, transcribe the audio
+      final transcription = await transcribeAudio(audioPath);
+
+      // Then analyze the transcription
+      final prompt =
+          '''
+You are a medical AI assistant. The following is a transcription of a patient 
+describing their symptoms:
+
+"$transcription"
+
+Please analyze these symptoms and provide a structured assessment.
+
+**IMPORTANT DISCLAIMER:** This is NOT medical advice. Always consult a healthcare professional.
+
+**Please provide:**
+
+1. **Extracted Symptoms:** List the specific symptoms mentioned
+
+2. **Possible Conditions:** List 2-3 possible conditions that match these symptoms
+
+3. **Urgency Level:** Rate as Low, Medium, High, or Emergency
+
+4. **Recommended Actions:** What should the person do next?
+
+5. **When to Seek Immediate Care:** Warning signs requiring emergency attention
+
+**Format your response clearly with these sections.**
+''';
+
+      final response = await _model.generateContent([Content.text(prompt)]);
+      final aiResponse = response.text ?? 'No response generated';
+
+      return DiagnosisResult.fromAIResponse(aiResponse);
+    } catch (e) {
+      throw Exception('Failed to analyze audio symptoms: $e');
+    }
+  }
+
+  /// Analyzes symptoms using chat session for follow-up questions
+  Future<DiagnosisResult> analyzeSymptoms(List<Symptom> symptoms) async {
+    try {
+      final prompt = _buildDiagnosisPrompt(symptoms);
+
+      final response = await _chatSession
+          .sendMessage(Content.text(prompt))
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Request timed out. Please check your internet connection.',
+              );
+            },
+          );
+
+      final aiResponse = response.text ?? 'No response generated';
+
+      if (aiResponse.isEmpty) {
+        throw Exception('Received empty response from AI');
+      }
+
+      return DiagnosisResult.fromAIResponse(aiResponse);
+    } on GenerativeAIException catch (e) {
+      // Handle API-specific errors
+      if (e.message.contains('API key')) {
+        throw Exception('Invalid API key. Please check your configuration.');
+      } else if (e.message.contains('quota')) {
+        throw Exception('API quota exceeded. Please try again later.');
+      } else {
+        throw Exception('AI service error: ${e.message}');
+      }
+    } catch (e) {
+      throw Exception('Failed to analyze symptoms: $e');
+    }
+  }
+
+  /// Asks a follow-up question about the diagnosis
+  Future<String> askFollowUp(String question) async {
+    try {
+      final response = await _chatSession.sendMessage(Content.text(question));
+      return response.text ?? 'No response generated';
+    } catch (e) {
+      throw Exception('Failed to process follow-up: $e');
+    }
+  }
+
+  /// Builds a structured prompt for diagnosis
+  String _buildDiagnosisPrompt(List<Symptom> symptoms) {
+    final symptomsList = symptoms
+        .map((s) => '- ${s.toPromptString()}')
+        .join('\n');
+
+    return '''
+You are a medical AI assistant providing preliminary health assessments. 
+Analyze the following symptoms and provide a structured response.
+
+**IMPORTANT DISCLAIMER:** This is NOT medical advice. Always consult a healthcare professional.
+
+**Patient Symptoms:**
+$symptomsList
+
+**Please provide:**
+
+1. **Possible Conditions:** List 2-3 possible conditions that match these symptoms (most likely first)
+
+2. **Urgency Level:** Rate as Low, Medium, High, or Emergency
+   - Low: Can wait for regular appointment
+   - Medium: Should see doctor within a week
+   - High: Should see doctor within 24-48 hours
+   - Emergency: Seek immediate medical attention
+
+3. **Recommended Actions:** What should the person do next?
+
+4. **When to Seek Immediate Care:** List warning signs that require emergency attention
+
+5. **Self-Care Suggestions:** Safe general recommendations (if urgency is Low/Medium)
+
+**Format your response clearly with these sections.**
+''';
+  }
+
+  /// Transcribes audio with retry logic
+  Future<String> transcribeAudioWithRetry(
+    String audioPath, {
+    int maxRetries = 3,
+  }) async {
+    int attempts = 0;
+    Exception? lastError;
+
+    while (attempts < maxRetries) {
+      try {
+        return await transcribeAudio(audioPath);
+      } catch (e) {
+        lastError = e as Exception;
+        attempts++;
+
+        if (attempts < maxRetries) {
+          // Wait before retry (exponential backoff)
+          await Future.delayed(Duration(seconds: attempts * 2));
+        }
+      }
+    }
+
+    throw lastError ?? Exception('Failed after $maxRetries attempts');
+  }
+
+  /// Resets the chat session
+  void resetChat() {
+    _chatSession = _model.startChat(history: []);
+  }
+
+  /// Disposes resources
+  void dispose() {
+    // Clean up if needed
+  }
+}
