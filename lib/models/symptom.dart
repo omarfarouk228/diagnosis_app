@@ -30,9 +30,23 @@ class Symptom {
   factory Symptom.fromJson(Map<String, dynamic> json) {
     return Symptom(
       name: json['name'] as String,
-      severity: json['severity'] as int,
+      severity: (json['severity'] as num).toInt(),
       duration: json['duration'] as String,
       description: json['description'] as String?,
+    );
+  }
+
+  Symptom copyWith({
+    String? name,
+    int? severity,
+    String? duration,
+    String? description,
+  }) {
+    return Symptom(
+      name: name ?? this.name,
+      severity: severity ?? this.severity,
+      duration: duration ?? this.duration,
+      description: description ?? this.description,
     );
   }
 

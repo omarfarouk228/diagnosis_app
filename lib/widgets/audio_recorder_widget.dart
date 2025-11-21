@@ -1,13 +1,14 @@
 import 'dart:async';
+import 'package:diagnosis_app/models/symptom.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../services/audio_service.dart';
 import '../services/gemini_service.dart';
 
 class AudioRecorderWidget extends StatefulWidget {
-  final Function(String transcription) onTranscriptionComplete;
+  final Function(List<Symptom> symptoms) onSymptomsExtracted;
 
-  const AudioRecorderWidget({super.key, required this.onTranscriptionComplete});
+  const AudioRecorderWidget({super.key, required this.onSymptomsExtracted});
 
   @override
   State<AudioRecorderWidget> createState() => _AudioRecorderWidgetState();
@@ -31,6 +32,7 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(24),
+      width: MediaQuery.sizeOf(context).width,
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surface,
         borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
@@ -260,16 +262,16 @@ class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
         _isProcessing = true;
       });
 
+      if (!mounted) return;
       // Transcribe audio using Gemini
       final geminiService = Provider.of<GeminiService>(context, listen: false);
-      final transcription = await geminiService.transcribeAudio(audioPath);
+      final symptoms = await geminiService.extractSymptomsFromAudio(audioPath);
 
       // Delete the audio file after transcription
       await _audioService.deleteRecording(audioPath);
 
       if (mounted) {
-        widget.onTranscriptionComplete(transcription);
-        Navigator.pop(context);
+        widget.onSymptomsExtracted(symptoms);
       }
     } catch (e) {
       setState(() {

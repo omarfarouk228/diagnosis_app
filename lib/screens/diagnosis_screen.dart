@@ -129,7 +129,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
 
   Widget _buildChatSection() {
     return Container(
-      color: Colors.grey[100],
+      color: Theme.of(context).appBarTheme.backgroundColor,
       child: ListView.builder(
         padding: const EdgeInsets.all(16),
         reverse: true,
@@ -154,7 +154,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         decoration: BoxDecoration(
           color: message.isUser
               ? Theme.of(context).colorScheme.primary
-              : Colors.white,
+              : Colors.grey.shade900,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -175,7 +175,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
                 : MarkdownBody(
                     data: message.text,
                     styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 14),
+                      p: const TextStyle(fontSize: 14, color: Colors.white),
                     ),
                   ),
             const SizedBox(height: 4),
@@ -270,6 +270,7 @@ class _DiagnosisScreenState extends State<DiagnosisScreen> {
         );
       });
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),

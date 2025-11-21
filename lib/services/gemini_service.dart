@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -18,7 +19,7 @@ class GeminiService {
 
     // Use gemini-1.5-flash for faster, cost-effective responses
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-2.5-flash-preview-09-2025',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7, // Balanced creativity and accuracy
@@ -122,6 +123,75 @@ Please analyze these symptoms and provide a structured assessment.
       return DiagnosisResult.fromAIResponse(aiResponse);
     } catch (e) {
       throw Exception('Failed to analyze audio symptoms: $e');
+    }
+  }
+
+  /// Extracts symptoms from an audio file
+  Future<List<Symptom>> extractSymptomsFromAudio(String audioPath) async {
+    try {
+      // Read audio file as bytes
+      final audioFile = File(audioPath);
+      final audioBytes = await audioFile.readAsBytes();
+
+      // Create audio content
+      final audioPart = DataPart('audio/mp4', audioBytes);
+
+      // Send to Gemini with prompt
+      final prompt = '''
+You are an expert medical assistant AI. A patient has recorded their symptoms.
+Listen to the audio and extract the symptoms into a structured JSON format.
+
+**Instructions:**
+1.  Identify each distinct symptom mentioned.
+2.  For each symptom, determine its name, severity (1-10), duration, and a brief description.
+3.  Format the output as a JSON array of objects. Each object must contain:
+    -   `"name"` (string)
+    -   `"severity"` (integer, 1-10)
+    -   `"duration"` (string, e.g., "3 days", "1 week")
+    -   `"description"` (string, optional)
+
+**Example JSON Output:**
+```json
+[
+  {
+    "name": "Headache",
+    "severity": 7,
+    "duration": "2 days",
+    "description": "Sharp pain behind the eyes."
+  },
+  {
+    "name": "Fever",
+    "severity": 6,
+    "duration": "1 day",
+    "description": "Feeling hot and cold."
+  }
+]
+```
+
+Provide only the JSON array in your response.
+''';
+
+      final response = await _model.generateContent([
+        Content.multi([TextPart(prompt), audioPart]),
+      ]);
+
+      final text = response.text;
+      if (text == null || text.isEmpty) {
+        throw Exception('Failed to extract symptoms: Empty response from AI.');
+      }
+
+      // Clean the response to ensure it's valid JSON
+      final jsonString = text
+          .replaceAll('```json', '')
+          .replaceAll('```', '')
+          .trim();
+
+      final decoded = json.decode(jsonString) as List;
+      return decoded
+          .map((s) => Symptom.fromJson(s as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to extract symptoms from audio: $e');
     }
   }
 

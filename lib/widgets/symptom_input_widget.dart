@@ -2,9 +2,14 @@ import 'package:flutter/material.dart';
 import '../models/symptom.dart';
 
 class SymptomInputWidget extends StatefulWidget {
-  final Function(Symptom) onSymptomAdded;
+  final Function(Symptom) onSymptomSaved;
+  final Symptom? symptom;
 
-  const SymptomInputWidget({super.key, required this.onSymptomAdded});
+  const SymptomInputWidget({
+    super.key,
+    required this.onSymptomSaved,
+    this.symptom,
+  });
 
   @override
   State<SymptomInputWidget> createState() => _SymptomInputWidgetState();
@@ -30,6 +35,17 @@ class _SymptomInputWidgetState extends State<SymptomInputWidget> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    if (widget.symptom != null) {
+      _nameController.text = widget.symptom!.name;
+      _descriptionController.text = widget.symptom!.description ?? '';
+      _severity = widget.symptom!.severity;
+      _duration = widget.symptom!.duration;
+    }
+  }
+
+  @override
   void dispose() {
     _nameController.dispose();
     _descriptionController.dispose();
@@ -38,6 +54,8 @@ class _SymptomInputWidgetState extends State<SymptomInputWidget> {
 
   @override
   Widget build(BuildContext context) {
+    final isEditing = widget.symptom != null;
+
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -66,7 +84,7 @@ class _SymptomInputWidgetState extends State<SymptomInputWidget> {
 
             // Title
             Text(
-              'Add Symptom',
+              isEditing ? 'Edit Symptom' : 'Add Symptom',
               style: Theme.of(
                 context,
               ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
@@ -167,7 +185,10 @@ class _SymptomInputWidgetState extends State<SymptomInputWidget> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text('Add Symptom', style: TextStyle(fontSize: 16)),
+              child: Text(
+                isEditing ? 'Save Changes' : 'Add Symptom',
+                style: const TextStyle(fontSize: 16),
+              ),
             ),
             const SizedBox(height: 16),
           ],
@@ -178,16 +199,35 @@ class _SymptomInputWidgetState extends State<SymptomInputWidget> {
 
   void _submitSymptom() {
     if (_formKey.currentState!.validate()) {
-      final symptom = Symptom(
-        name: _nameController.text.trim(),
-        severity: _severity,
-        duration: _duration,
-        description: _descriptionController.text.trim().isEmpty
+      final isEditing = widget.symptom != null;
+
+      final symptomData = {
+        'name': _nameController.text.trim(),
+        'severity': _severity,
+        'duration': _duration,
+        'description': _descriptionController.text.trim().isEmpty
             ? null
             : _descriptionController.text.trim(),
-      );
+      };
 
-      widget.onSymptomAdded(symptom);
+      Symptom resultSymptom;
+      if (isEditing) {
+        resultSymptom = widget.symptom!.copyWith(
+          name: symptomData['name'] as String,
+          severity: symptomData['severity'] as int,
+          duration: symptomData['duration'] as String,
+          description: symptomData['description'] as String?,
+        );
+      } else {
+        resultSymptom = Symptom(
+          name: symptomData['name'] as String,
+          severity: symptomData['severity'] as int,
+          duration: symptomData['duration'] as String,
+          description: symptomData['description'] as String?,
+        );
+      }
+
+      widget.onSymptomSaved(resultSymptom);
       Navigator.pop(context);
     }
   }

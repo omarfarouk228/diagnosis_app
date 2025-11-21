@@ -1,4 +1,3 @@
-import 'package:diagnosis_app/models/diagnosis_result.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/symptom.dart';
@@ -41,16 +40,15 @@ class _HomeScreenState extends State<HomeScreen> {
           FloatingActionButton(
             onPressed: _showAudioRecorder,
             heroTag: 'voice',
-            child: const Icon(Icons.mic),
             tooltip: 'Record symptoms',
+            child: const Icon(Icons.mic),
           ),
           const SizedBox(height: 16),
           // Add symptom FAB
-          FloatingActionButton.extended(
+          FloatingActionButton(
             onPressed: _addSymptom,
             heroTag: 'add',
-            icon: const Icon(Icons.add),
-            label: const Text('Add Symptom'),
+            child: const Icon(Icons.edit),
           ),
         ],
       ),
@@ -107,7 +105,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // Add this method to show the audio recorder
   void _showAudioRecorder() {
     showModalBottomSheet(
       context: context,
@@ -118,134 +115,14 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => AudioRecorderWidget(
-        onTranscriptionComplete: (transcription) {
-          // Show transcription and allow user to confirm
-          _showTranscriptionDialog(transcription);
+        onSymptomsExtracted: (symptoms) {
+          setState(() {
+            _symptoms.addAll(symptoms);
+          });
+          Navigator.pop(context);
         },
       ),
     );
-  }
-
-  // Add this method to show transcription confirmation
-  void _showTranscriptionDialog(String transcription) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Voice Transcription'),
-        content: SingleChildScrollView(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'Your symptoms have been transcribed:',
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.grey[100],
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.grey[300]!),
-                ),
-                child: Text(
-                  transcription,
-                  style: const TextStyle(fontSize: 14),
-                ),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'Would you like to analyze these symptoms?',
-                style: TextStyle(fontSize: 13, color: Colors.grey),
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              _analyzeVoiceSymptoms(transcription);
-            },
-            child: const Text('Analyze'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // Add this method to analyze voice-transcribed symptoms
-  Future<void> _analyzeVoiceSymptoms(String transcription) async {
-    setState(() {
-      _isAnalyzing = true;
-    });
-
-    try {
-      final geminiService = Provider.of<GeminiService>(context, listen: false);
-
-      // Create a temporary audio path or use the transcription directly
-      // For now, we'll analyze the transcription as text
-      final prompt =
-          '''
-You are a medical AI assistant. A patient has described their symptoms via voice:
-
-"$transcription"
-
-Please extract the symptoms and provide a structured assessment.
-
-**IMPORTANT DISCLAIMER:** This is NOT medical advice. Always consult a healthcare professional.
-
-**Please provide:**
-
-1. **Extracted Symptoms:** List the specific symptoms mentioned with estimated severity (1-10)
-
-2. **Possible Conditions:** List 2-3 possible conditions that match these symptoms
-
-3. **Urgency Level:** Rate as Low, Medium, High, or Emergency
-
-4. **Recommended Actions:** What should the person do next?
-
-5. **When to Seek Immediate Care:** Warning signs requiring emergency attention
-
-**Format your response clearly with these sections.**
-''';
-
-      final response = await geminiService.askFollowUp(prompt);
-      final result = DiagnosisResult.fromAIResponse(response);
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DiagnosisScreen(
-              result: result,
-              symptoms:
-                  [], // Voice symptoms don't have structured Symptom objects
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-        });
-      }
-    }
   }
 
   Widget _buildEmptyState() {
@@ -301,10 +178,20 @@ Please extract the symptoms and provide a structured assessment.
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             subtitle: Text('Duration: ${symptom.duration}'),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _removeSymptom(index),
-              color: Colors.red,
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.edit_outlined),
+                  onPressed: () => _editSymptom(index),
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+                IconButton(
+                  icon: const Icon(Icons.delete_outline),
+                  onPressed: () => _removeSymptom(index),
+                  color: Colors.red,
+                ),
+              ],
             ),
           ),
         );
@@ -398,9 +285,27 @@ Please extract the symptoms and provide a structured assessment.
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) => SymptomInputWidget(
-        onSymptomAdded: (symptom) {
+        onSymptomSaved: (symptom) {
           setState(() {
             _symptoms.add(symptom);
+          });
+        },
+      ),
+    );
+  }
+
+  void _editSymptom(int index) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) => SymptomInputWidget(
+        symptom: _symptoms[index],
+        onSymptomSaved: (symptom) {
+          setState(() {
+            _symptoms[index] = symptom;
           });
         },
       ),
