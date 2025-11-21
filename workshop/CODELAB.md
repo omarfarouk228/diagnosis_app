@@ -8,9 +8,9 @@
 
 To follow this codelab, please ensure you are on the `starter` branch of the project. This branch provides the initial setup, including:
 
--   **Models, Screens, and Widgets**: These UI and data structure components are already in place.
--   **`audio_service.dart`**: This service is fully implemented and ready to use.
--   **`gemini_service.dart`**: This service contains placeholder (mockup) functions that return dummy data. You will progressively integrate the actual Gemini AI logic into this file throughout the codelab.
+- **Models, Screens, and Widgets**: These UI and data structure components are already in place.
+- **`audio_service.dart`**: This service is fully implemented and ready to use.
+- **`gemini_service.dart`**: This service contains placeholder (mockup) functions that return dummy data. You will progressively integrate the actual Gemini AI logic into this file throughout the codelab.
 
 To switch to the `starter` branch, run the following command in your terminal:
 
@@ -55,63 +55,49 @@ In this codelab, you'll create a fully functional AI-powered medical diagnosis a
 
 ---
 
-## Step 1: Environment Setup
+## Table of Contents
 
-### 1.1 Create a New Flutter Project
+- [Step 1: Getting Started](#step-1-getting-started)
+- [Step 2: Understanding the Project Structure](#step-2-understanding-the-project-structure)
+- [Step 3: Implement the Gemini AI Service](#step-3-implement-the-gemini-ai-service)
+- [Step 4: Run the App and Test](#step-4-run-the-app-and-test)
+- [Step 5: Error Handling & Edge Cases](#step-5-error-handling--edge-cases)
+- [Step 6: Deployment Considerations](#step-6-deployment-considerations)
+- [Step 7: Congratulations!](#step-7-congratulations-)
+- [Next Steps](#next-steps)
+- [Resources](#resources)
+- [Troubleshooting](#troubleshooting)
+- [License](#license)
+- [About the Author](#about-the-author)
 
-Open your terminal and create a new Flutter project:
+---
+
+## Step 1: Getting Started
+
+### 1.1 Get the Starter Code
+
+Instead of creating a new project from scratch, you'll clone the starter project from GitHub.
+
+Open your terminal and clone the repository:
 
 ```bash
-flutter create ai_diagnosis_app
-cd ai_diagnosis_app
+git clone <repository_url>
+cd <repository_name>
 ```
 
-### 1.2 Add Required Dependencies
+Then, switch to the `starter` branch:
 
-Open `pubspec.yaml` and add the following dependencies:
-
-```yaml
-dependencies:
-  flutter:
-    sdk: flutter
-
-  # Gemini AI integration
-  google_generative_ai: ^0.4.6
-
-  # Environment variables for API key
-  flutter_dotenv: ^5.1.0
-
-  # UI enhancements
-  flutter_markdown: ^0.7.3
-
-  # State management (optional but recommended)
-  provider: ^6.1.2
-
-  # Audio recording and playback
-  record: ^5.1.2
-
-  # Audio player
-  just_audio: ^0.9.40
-
-  # Permission handling
-  permission_handler: ^11.3.1
-
-  # Path provider for file storage
-  path_provider: ^2.1.4
-
-dev_dependencies:
-  flutter_test:
-    sdk: flutter
-  flutter_lints: ^4.0.0
+```bash
+git checkout starter
 ```
 
-Run:
+Finally, get the dependencies:
 
 ```bash
 flutter pub get
 ```
 
-### 1.3 Set Up Environment Variables
+### 1.2 Set Up Environment Variables
 
 Create a `.env` file in the root of your project:
 
@@ -125,15 +111,9 @@ Add your Gemini API key to `.env`:
 GEMINI_API_KEY=your_api_key_here
 ```
 
-**⚠️ Important:** Add `.env` to your `.gitignore`:
+**⚠️ Important:** The `.env` file is already included in the project's `.gitignore`.
 
-```gitignore
-# .gitignore
-.env
-*.env
-```
-
-Update `pubspec.yaml` to include the `.env` file:
+Update `pubspec.yaml` to include the `.env` file as an asset:
 
 ```yaml
 flutter:
@@ -141,11 +121,13 @@ flutter:
     - .env
 ```
 
-### 1.4 Configure Platform Permissions
+### 1.3 Configure Platform Permissions
+
+The starter project should already have the necessary permissions configured. However, it's good practice to verify them.
 
 #### Android Setup
 
-Open `android/app/src/main/AndroidManifest.xml` and add these permissions:
+Check `android/app/src/main/AndroidManifest.xml` for these permissions:
 
 ```xml
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -154,30 +136,24 @@ Open `android/app/src/main/AndroidManifest.xml` and add these permissions:
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-
-    <application
-        android:label="ai_diagnosis_app"
-        android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher">
-        <!-- Your app configuration -->
-    </application>
+    ...
 </manifest>
 ```
 
 #### iOS Setup
 
-Open `ios/Runner/Info.plist` and add these keys:
+Check `ios/Runner/Info.plist` for these keys:
 
 ```xml
 <dict>
-    <!-- Add these keys -->
+    ...
     <key>NSMicrophoneUsageDescription</key>
     <string>This app needs microphone access to record your symptoms via voice</string>
     <key>UIBackgroundModes</key>
     <array>
         <string>audio</string>
     </array>
-    <!-- Rest of your configuration -->
+    ...
 </dict>
 ```
 
@@ -189,185 +165,123 @@ Run your app to ensure everything is set up correctly:
 flutter run
 ```
 
-You should see the default Flutter counter app.
+You should see the home screen of the diagnosis app.
 
 ---
 
-## Step 2: Project Structure
+## Step 2: Understanding the Project Structure
 
-### 2.1 Create Folder Structure
+### 2.1 The Starter Project
 
-Create the following folder structure:
+The `starter` branch provides a solid foundation for our codelab. Here's what's already included:
 
-```
-lib/
-├── main.dart
-├── models/
-│   ├── symptom.dart
-│   └── diagnosis_result.dart
-├── services/
-│   ├── gemini_service.dart
-│   └── audio_service.dart
-├── screens/
-│   ├── home_screen.dart
-│   └── diagnosis_screen.dart
-└── widgets/
-    ├── symptom_input_widget.dart
-    ├── audio_recorder_widget.dart
-    └── diagnosis_display_widget.dart
-```
+- **`main.dart`**: The app's entry point, with theme and `Provider` setup.
+- **Models**: `symptom.dart` and `diagnosis_result.dart` are fully implemented.
+- **Screens**: `home_screen.dart` and `diagnosis_screen.dart` contain the complete UI.
+- **Widgets**: `symptom_input_widget.dart` and `audio_recorder_widget.dart` are ready to use.
+- **`audio_service.dart`**: A complete service for handling audio recording and file management.
 
-Create these directories:
+### 2.2 Your Goal
 
-```bash
-mkdir -p lib/models lib/services lib/screens lib/widgets
-```
+Your main task is to bring the app to life by implementing the `GeminiService`. Currently, it contains placeholder methods that return mock data. You will replace these with actual calls to the Gemini AI API.
 
-### 2.2 Understanding the Architecture
+### 2.3 Understanding the Architecture
 
 Our app follows a clean architecture pattern:
 
-- **Models**: Data structures (Symptom, DiagnosisResult)
-- **Services**: AI communication layer (GeminiService) and Audio handling (AudioService)
-- **Screens**: Full-page views (Home, Diagnosis)
-- **Widgets**: Reusable UI components (including AudioRecorderWidget)
+- **Models**: Data structures (Symptom, DiagnosisResult).
+- **Services**: The communication layer. You'll be working in `GeminiService`. `AudioService` is already complete.
+- **Screens**: Full-page views (Home, Diagnosis).
+- **Widgets**: Reusable UI components.
 
 ---
 
-## Step 3: Create Data Models
+## Step 3: Implement the Gemini AI Service
 
-### 3.1 Symptom Model
+This is the core of the codelab. You will be working in `lib/services/gemini_service.dart`.
 
-Create `lib/models/symptom.dart`:
+### 3.1 The Starter Code
 
-```dart
-// lib/models/symptom.dart
+Open `lib/services/gemini_service.dart`. It contains placeholder methods that return mock data. This allows the UI to function while you implement the AI logic.
 
-class Symptom {
-  final String name;
-  final int severity; // 1-10 scale
-  final String duration; // e.g., "2 days", "1 week"
-  final String? description;
-
-  Symptom({
-    required this.name,
-    required this.severity,
-    required this.duration,
-    this.description,
-  });
-
-  // Convert to a formatted string for the AI prompt
-  String toPromptString() {
-    return '$name (Severity: $severity/10, Duration: $duration)${description != null ? ' - $description' : ''}';
-  }
-
-  // Convert to JSON for storage
-  Map<String, dynamic> toJson() {
-    return {
-      'name': name,
-      'severity': severity,
-      'duration': duration,
-      'description': description,
-    };
-  }
-
-  // Create from JSON
-  factory Symptom.fromJson(Map<String, dynamic> json) {
-    return Symptom(
-      name: json['name'] as String,
-      severity: json['severity'] as int,
-      duration: json['duration'] as String,
-      description: json['description'] as String?,
-    );
-  }
-
-  @override
-  String toString() => toPromptString();
-}
-```
-
-### 3.2 Diagnosis Result Model
-
-Create `lib/models/diagnosis_result.dart`:
-
-```dart
-// lib/models/diagnosis_result.dart
-
-class DiagnosisResult {
-  final List<String> possibleConditions;
-  final String recommendedActions;
-  final String urgencyLevel; // "Low", "Medium", "High", "Emergency"
-  final String additionalNotes;
-  final DateTime timestamp;
-
-  DiagnosisResult({
-    required this.possibleConditions,
-    required this.recommendedActions,
-    required this.urgencyLevel,
-    required this.additionalNotes,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.now();
-
-  // Parse from AI response
-  factory DiagnosisResult.fromAIResponse(String aiResponse) {
-    // Simple parsing - in production, use structured output
-    final conditions = <String>[];
-    final lines = aiResponse.split('\n');
-
-    String recommended = '';
-    String urgency = 'Medium';
-    String notes = '';
-
-    // Parse AI response (this is simplified)
-    for (var line in lines) {
-      if (line.toLowerCase().contains('condition') ||
-          line.toLowerCase().contains('possible')) {
-        conditions.add(line.trim());
-      }
-      if (line.toLowerCase().contains('recommend')) {
-        recommended = line.trim();
-      }
-      if (line.toLowerCase().contains('urgency') ||
-          line.toLowerCase().contains('emergency')) {
-        urgency = 'High';
-      }
-    }
-
-    return DiagnosisResult(
-      possibleConditions: conditions.isEmpty
-          ? ['Unable to determine from symptoms provided']
-          : conditions,
-      recommendedActions: recommended.isEmpty
-          ? 'Please consult a healthcare professional'
-          : recommended,
-      urgencyLevel: urgency,
-      additionalNotes: notes.isEmpty ? aiResponse : notes,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      'possibleConditions': possibleConditions,
-      'recommendedActions': recommendedActions,
-      'urgencyLevel': urgencyLevel,
-      'additionalNotes': additionalNotes,
-      'timestamp': timestamp.toIso8601String(),
-    };
-  }
-}
-```
-
----
-
-## Step 4: Implement Gemini AI Service
-
-### 4.1 Create the Service Class
-
-Create `lib/services/gemini_service.dart`:
+Here's the initial content of the file:
 
 ```dart
 // lib/services/gemini_service.dart
 
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:google_generative_ai/google_generative_ai.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import '../models/symptom.dart';
+import '../models/diagnosis_result.dart';
+
+class GeminiService {
+  // MOCK IMPLEMENTATION
+  // In this codelab, you will replace these mock methods with real API calls.
+
+  /// Analyzes symptoms and returns a diagnosis
+  Future<DiagnosisResult> analyzeSymptoms(List<Symptom> symptoms) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 2));
+
+    // Return mock data
+    return DiagnosisResult.fromAIResponse(
+      '''
+      **Possible Conditions:**
+      - Common Cold
+      - Influenza (Flu)
+
+      **Urgency Level:** Low
+
+      **Recommended Actions:**
+      - Rest and drink plenty of fluids.
+      - Monitor your symptoms.
+
+      **When to Seek Immediate Care:**
+      - If you have difficulty breathing.
+      - If your fever is very high.
+      ''',
+    );
+  }
+
+  /// Extracts symptoms from an audio file
+  Future<List<Symptom>> extractSymptomsFromAudio(String audioPath) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 3));
+
+    // Return mock data
+    return [
+      Symptom(name: 'Headache', severity: 6, duration: '3 days', description: 'From audio'),
+      Symptom(name: 'Fever', severity: 5, duration: '2 days', description: 'From audio'),
+    ];
+  }
+
+  /// Asks a follow-up question about the diagnosis
+  Future<String> askFollowUp(String question) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(seconds: 1));
+    return 'This is a mock response to your follow-up question: "$question". In a real app, I would provide a more detailed answer.';
+  }
+
+  void dispose() {
+    // No resources to dispose in mock implementation
+  }
+}
+```
+
+### 3.2 Initialize the Gemini Model
+
+First, let's set up the actual Gemini `GenerativeModel` and `ChatSession`.
+
+Replace the mock `GeminiService` class content with the following initialization code. This will read your API key and configure the model.
+
+```dart
+// lib/services/gemini_service.dart
+
+import 'dart:convert';
 import 'dart:io';
 import 'package:google_generative_ai/google_generative_ai.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -388,7 +302,7 @@ class GeminiService {
 
     // Use gemini-1.5-flash for faster, cost-effective responses
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash',
+      model: 'gemini-1.5-flash-preview-0527',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7, // Balanced creativity and accuracy
@@ -397,18 +311,9 @@ class GeminiService {
         maxOutputTokens: 1024,
       ),
       safetySettings: [
-        SafetySetting(
-          HarmCategory.harassment,
-          HarmBlockThreshold.medium,
-        ),
-        SafetySetting(
-          HarmCategory.hateSpeech,
-          HarmBlockThreshold.medium,
-        ),
-        SafetySetting(
-          HarmCategory.dangerousContent,
-          HarmBlockThreshold.medium,
-        ),
+        SafetySetting(HarmCategory.harassment, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.hateSpeech, HarmBlockThreshold.medium),
+        SafetySetting(HarmCategory.dangerousContent, HarmBlockThreshold.medium),
       ],
     );
 
@@ -416,121 +321,55 @@ class GeminiService {
     _chatSession = _model.startChat(history: []);
   }
 
-  /// Analyzes symptoms and returns a diagnosis
-  Future<DiagnosisResult> analyzeSymptomsbasic(List<Symptom> symptoms) async {
-    try {
-      // Build the prompt
-      final prompt = _buildDiagnosisPrompt(symptoms);
+  // ... methods will be added here
 
-      // Send to Gemini AI
-      final response = await _model.generateContent([Content.text(prompt)]);
-
-      // Extract text from response
-      final aiResponse = response.text ?? 'No response generated';
-
-      // Parse and return result
-      return DiagnosisResult.fromAIResponse(aiResponse);
-    } catch (e) {
-      throw Exception('Failed to analyze symptoms: $e');
-    }
+  void dispose() {
+    // Clean up if needed
   }
+}
+```
 
-  /// Transcribes audio to text using Gemini
-  Future<String> transcribeAudio(String audioPath) async {
-    try {
-      // Read audio file as bytes
-      final audioFile = File(audioPath);
-      final audioBytes = await audioFile.readAsBytes();
+### 3.3 Implement Symptom Analysis from Text
 
-      // Create audio content
-      final audioPart = DataPart('audio/mp4', audioBytes);
+Now, let's implement the `analyzeSymptoms` method. This method takes a list of `Symptom` objects, builds a detailed prompt, and sends it to Gemini.
 
-      // Send to Gemini with prompt
-      final prompt = '''
-Please transcribe the following audio recording.
-The audio contains a description of medical symptoms.
-Provide only the transcription, without any additional commentary.
-''';
+Add the following methods inside your `GeminiService` class:
 
-      final response = await _model.generateContent([
-        Content.multi([
-          TextPart(prompt),
-          audioPart,
-        ])
-      ]);
-
-      return response.text ?? 'Unable to transcribe audio';
-    } catch (e) {
-      throw Exception('Failed to transcribe audio: $e');
-    }
-  }
-
-  /// Analyzes symptoms from audio transcription
-  Future<DiagnosisResult> analyzeSymptomsFromAudio(String audioPath) async {
-    try {
-      // First, transcribe the audio
-      final transcription = await transcribeAudio(audioPath);
-
-      // Then analyze the transcription
-      final prompt = '''
-You are a medical AI assistant. The following is a transcription of a patient
-describing their symptoms:
-
-"$transcription"
-
-Please analyze these symptoms and provide a structured assessment.
-
-**IMPORTANT DISCLAIMER:** This is NOT medical advice. Always consult a healthcare professional.
-
-**Please provide:**
-
-1. **Extracted Symptoms:** List the specific symptoms mentioned
-
-2. **Possible Conditions:** List 2-3 possible conditions that match these symptoms
-
-3. **Urgency Level:** Rate as Low, Medium, High, or Emergency
-
-4. **Recommended Actions:** What should the person do next?
-
-5. **When to Seek Immediate Care:** Warning signs requiring emergency attention
-
-**Format your response clearly with these sections.**
-''';
-
-      final response = await _model.generateContent([Content.text(prompt)]);
-      final aiResponse = response.text ?? 'No response generated';
-
-      return DiagnosisResult.fromAIResponse(aiResponse);
-    } catch (e) {
-      throw Exception('Failed to analyze audio symptoms: $e');
-    }
-  }
-
+```dart
   /// Analyzes symptoms using chat session for follow-up questions
   Future<DiagnosisResult> analyzeSymptoms(List<Symptom> symptoms) async {
     try {
       final prompt = _buildDiagnosisPrompt(symptoms);
 
-      final response = await _chatSession.sendMessage(
-        Content.text(prompt),
-      );
+      final response = await _chatSession
+          .sendMessage(Content.text(prompt))
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              throw Exception(
+                'Request timed out. Please check your internet connection.',
+              );
+            },
+          );
 
       final aiResponse = response.text ?? 'No response generated';
+
+      if (aiResponse.isEmpty) {
+        throw Exception('Received empty response from AI');
+      }
+
       return DiagnosisResult.fromAIResponse(aiResponse);
+    } on GenerativeAIException catch (e) {
+      // Handle API-specific errors
+      if (e.message.contains('API key')) {
+        throw Exception('Invalid API key. Please check your configuration.');
+      } else if (e.message.contains('quota')) {
+        throw Exception('API quota exceeded. Please try again later.');
+      } else {
+        throw Exception('AI service error: ${e.message}');
+      }
     } catch (e) {
       throw Exception('Failed to analyze symptoms: $e');
-    }
-  }
-
-  /// Asks a follow-up question about the diagnosis
-  Future<String> askFollowUp(String question) async {
-    try {
-      final response = await _chatSession.sendMessage(
-        Content.text(question),
-      );
-      return response.text ?? 'No response generated';
-    } catch (e) {
-      throw Exception('Failed to process follow-up: $e');
     }
   }
 
@@ -568,2022 +407,205 @@ $symptomsList
 **Format your response clearly with these sections.**
 ''';
   }
-
-  /// Resets the chat session
-  void resetChat() {
-    _chatSession = _model.startChat(history: []);
-  }
-
-  /// Disposes resources
-  void dispose() {
-    // Clean up if needed
-  }
-}
 ```
 
-### 4.2 Understanding the Service
+### 3.4 Implement Symptom Extraction from Audio
 
-Key components:
+Next, implement the `extractSymptomsFromAudio` method. This powerful feature uses Gemini's multimodal capabilities to process an audio file and extract structured data from it.
 
-- **GenerativeModel**: Initializes Gemini with specific configurations
-- **ChatSession**: Maintains conversational context for follow-ups
-- **Safety Settings**: Ensures appropriate content generation
-- **Structured Prompts**: Guides AI to produce consistent, useful outputs
-- **Audio Transcription**: Converts voice recordings to text using Gemini's multimodal capabilities
+Add this method to your `GeminiService` class:
 
----
-
-## Step 4.3: Create Audio Recording Service
-
-### Create the Audio Service
-
-Create `lib/services/audio_service.dart`:
-
-```dart
-// lib/services/audio_service.dart
-
-import 'dart:async';
-import 'dart:io';
-import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
-import 'package:permission_handler/permission_handler.dart';
-
-class AudioService {
-  final AudioRecorder _recorder = AudioRecorder();
-  String? _currentRecordingPath;
-  bool _isRecording = false;
-
-  bool get isRecording => _isRecording;
-  String? get currentRecordingPath => _currentRecordingPath;
-
-  /// Requests microphone permission
-  Future<bool> requestPermission() async {
-    final status = await Permission.microphone.request();
-    return status.isGranted;
-  }
-
-  /// Checks if microphone permission is granted
-  Future<bool> hasPermission() async {
-    final status = await Permission.microphone.status;
-    return status.isGranted;
-  }
-
-  /// Starts recording audio
-  Future<void> startRecording() async {
+````dart
+  /// Extracts symptoms from an audio file
+  Future<List<Symptom>> extractSymptomsFromAudio(String audioPath) async {
     try {
-      // Check permission
-      if (!await hasPermission()) {
-        final granted = await requestPermission();
-        if (!granted) {
-          throw Exception('Microphone permission denied');
-        }
-      }
+      // Read audio file as bytes
+      final audioFile = File(audioPath);
+      final audioBytes = await audioFile.readAsBytes();
 
-      // Check if already recording
-      if (_isRecording) {
-        throw Exception('Already recording');
-      }
+      // Create audio content
+      final audioPart = DataPart('audio/mp4', audioBytes);
 
-      // Generate file path
-      final directory = await getApplicationDocumentsDirectory();
-      final timestamp = DateTime.now().millisecondsSinceEpoch;
-      _currentRecordingPath = '${directory.path}/recording_$timestamp.m4a';
+      // Send to Gemini with a prompt that asks for JSON output
+      final prompt = '''
+You are an expert medical assistant AI. A patient has recorded their symptoms.
+Listen to the audio and extract the symptoms into a structured JSON format.
 
-      // Start recording
-      await _recorder.start(
-        const RecordConfig(
-          encoder: AudioEncoder.aacLc,
-          bitRate: 128000,
-          sampleRate: 44100,
-        ),
-        path: _currentRecordingPath!,
-      );
+**Instructions:**
+1.  Identify each distinct symptom mentioned.
+2.  For each symptom, determine its name, severity (1-10), duration, and a brief description.
+3.  Format the output as a JSON array of objects. Each object must contain:
+    -   `"name"` (string)
+    -   `"severity"` (integer, 1-10)
+    -   `"duration"` (string, e.g., "3 days", "1 week")
+    -   `"description"` (string, optional)
 
-      _isRecording = true;
-    } catch (e) {
-      throw Exception('Failed to start recording: $e');
-    }
+**Example JSON Output:**
+```json
+[
+  {
+    "name": "Headache",
+    "severity": 7,
+    "duration": "2 days",
+    "description": "Sharp pain behind the eyes."
   }
-
-  /// Stops recording and returns the file path
-  Future<String?> stopRecording() async {
-    try {
-      if (!_isRecording) {
-        throw Exception('Not currently recording');
-      }
-
-      final path = await _recorder.stop();
-      _isRecording = false;
-
-      return path;
-    } catch (e) {
-      throw Exception('Failed to stop recording: $e');
-    }
-  }
-
-  /// Cancels the current recording
-  Future<void> cancelRecording() async {
-    try {
-      if (_isRecording) {
-        await _recorder.stop();
-        _isRecording = false;
-
-        // Delete the recording file
-        if (_currentRecordingPath != null) {
-          final file = File(_currentRecordingPath!);
-          if (await file.exists()) {
-            await file.delete();
-          }
-        }
-      }
-    } catch (e) {
-      throw Exception('Failed to cancel recording: $e');
-    }
-  }
-
-  /// Gets the current recording duration
-  Future<Duration> getRecordingDuration() async {
-    if (!_isRecording) return Duration.zero;
-
-    try {
-      final amplitude = await _recorder.getAmplitude();
-      // This is a placeholder - you might need to track duration manually
-      return Duration.zero;
-    } catch (e) {
-      return Duration.zero;
-    }
-  }
-
-  /// Checks if the device has a microphone
-  Future<bool> hasMicrophone() async {
-    return await _recorder.hasPermission();
-  }
-
-  /// Deletes a recording file
-  Future<void> deleteRecording(String path) async {
-    try {
-      final file = File(path);
-      if (await file.exists()) {
-        await file.delete();
-      }
-    } catch (e) {
-      throw Exception('Failed to delete recording: $e');
-    }
-  }
-
-  /// Gets the size of a recording file in bytes
-  Future<int> getRecordingSize(String path) async {
-    try {
-      final file = File(path);
-      if (await file.exists()) {
-        return await file.length();
-      }
-      return 0;
-    } catch (e) {
-      return 0;
-    }
-  }
-
-  /// Disposes the recorder
-  void dispose() {
-    _recorder.dispose();
-  }
-}
+]
 ```
 
-### Understanding Audio Service Features
-
-- **Permission Handling**: Requests and checks microphone permissions
-- **Recording Control**: Start, stop, and cancel recordings
-- **File Management**: Saves recordings with timestamps, can delete files
-- **Error Handling**: Comprehensive error messages
-- **Format**: Records in M4A format (compatible with Gemini AI)
-
----
-
-## Step 5: Build the User Interface
-
-### 5.1 Update Main Entry Point
-
-Update `lib/main.dart`:
-
-```dart
-// lib/main.dart
-
-import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:provider/provider.dart';
-import 'screens/home_screen.dart';
-import 'services/gemini_service.dart';
-
-Future<void> main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  // Load environment variables
-  await dotenv.load(fileName: ".env");
-
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Provider<GeminiService>(
-      create: (_) => GeminiService(),
-      dispose: (_, service) => service.dispose(),
-      child: MaterialApp(
-        title: 'AI Diagnosis Assistant',
-        debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.light,
-          ),
-          useMaterial3: true,
-          cardTheme: CardTheme(
-            elevation: 2,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-        darkTheme: ThemeData(
-          colorScheme: ColorScheme.fromSeed(
-            seedColor: Colors.blue,
-            brightness: Brightness.dark,
-          ),
-          useMaterial3: true,
-        ),
-        themeMode: ThemeMode.system,
-        home: const HomeScreen(),
-      ),
-    );
-  }
-}
-```
-
-### 5.2 Create Home Screen
-
-Create `lib/screens/home_screen.dart`:
-
-```dart
-// lib/screens/home_screen.dart
-
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/symptom.dart';
-import '../services/gemini_service.dart';
-import 'diagnosis_screen.dart';
-import '../widgets/symptom_input_widget.dart';
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
-
-  @override
-  State<HomeScreen> createState() => _HomeScreenState();
-}
-
-class _HomeScreenState extends State<HomeScreen> {
-  final List<Symptom> _symptoms = [];
-  bool _isAnalyzing = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Diagnosis Assistant'),
-        centerTitle: true,
-        elevation: 0,
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Header section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    Theme.of(context).colorScheme.primary,
-                    Theme.of(context).colorScheme.secondary,
-                  ],
-                ),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    Icons.health_and_safety,
-                    size: 48,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Describe Your Symptoms',
-                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Add your symptoms to get an AI-powered preliminary assessment',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Symptoms list
-            Expanded(
-              child: _symptoms.isEmpty
-                  ? _buildEmptyState()
-                  : _buildSymptomsList(),
-            ),
-
-            // Action buttons
-            _buildActionButtons(),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _addSymptom,
-        icon: const Icon(Icons.add),
-        label: const Text('Add Symptom'),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.medical_information_outlined,
-            size: 120,
-            color: Colors.grey[300],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'No symptoms added yet',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Tap the button below to add your first symptom',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[500],
-                ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSymptomsList() {
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: _symptoms.length,
-      itemBuilder: (context, index) {
-        final symptom = _symptoms[index];
-        return Card(
-          margin: const EdgeInsets.only(bottom: 12),
-          child: ListTile(
-            leading: CircleAvatar(
-              backgroundColor: _getSeverityColor(symptom.severity),
-              child: Text(
-                '${symptom.severity}',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            title: Text(
-              symptom.name,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            subtitle: Text('Duration: ${symptom.duration}'),
-            trailing: IconButton(
-              icon: const Icon(Icons.delete_outline),
-              onPressed: () => _removeSymptom(index),
-              color: Colors.red,
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildActionButtons() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Disclaimer
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.orange.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.orange.withOpacity(0.3)),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.warning_amber, color: Colors.orange, size: 20),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'This is not medical advice. Always consult a healthcare professional.',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: Colors.orange[800],
-                        ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Analyze button
-          SizedBox(
-            width: double.infinity,
-            height: 56,
-            child: ElevatedButton.icon(
-              onPressed: _symptoms.isEmpty || _isAnalyzing
-                  ? null
-                  : _analyzeSymptoms,
-              icon: _isAnalyzing
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Icon(Icons.psychology),
-              label: Text(
-                _isAnalyzing ? 'Analyzing...' : 'Analyze Symptoms',
-                style: const TextStyle(fontSize: 16),
-              ),
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Color _getSeverityColor(int severity) {
-    if (severity <= 3) return Colors.green;
-    if (severity <= 6) return Colors.orange;
-    return Colors.red;
-  }
-
-  void _addSymptom() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => SymptomInputWidget(
-        onSymptomAdded: (symptom) {
-          setState(() {
-            _symptoms.add(symptom);
-          });
-        },
-      ),
-    );
-  }
-
-  void _removeSymptom(int index) {
-    setState(() {
-      _symptoms.removeAt(index);
-    });
-  }
-
-  Future<void> _analyzeSymptoms() async {
-    setState(() {
-      _isAnalyzing = true;
-    });
-
-    try {
-      final geminiService = Provider.of<GeminiService>(context, listen: false);
-      final result = await geminiService.analyzeSymptoms(_symptoms);
-
-      if (mounted) {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DiagnosisScreen(
-              result: result,
-              symptoms: _symptoms,
-            ),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() {
-          _isAnalyzing = false;
-        });
-      }
-    }
-  }
-}
-```
-
----
-
-## Step 6: Create Symptom Input Widget
-
-Create `lib/widgets/symptom_input_widget.dart`:
-
-```dart
-// lib/widgets/symptom_input_widget.dart
-
-import 'package:flutter/material.dart';
-import '../models/symptom.dart';
-
-class SymptomInputWidget extends StatefulWidget {
-  final Function(Symptom) onSymptomAdded;
-
-  const SymptomInputWidget({
-    super.key,
-    required this.onSymptomAdded,
-  });
-
-  @override
-  State<SymptomInputWidget> createState() => _SymptomInputWidgetState();
-}
-
-class _SymptomInputWidgetState extends State<SymptomInputWidget> {
-  final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _descriptionController = TextEditingController();
-
-  int _severity = 5;
-  String _duration = '1 day';
-
-  final List<String> _commonDurations = [
-    '1 hour',
-    'Few hours',
-    '1 day',
-    '2-3 days',
-    '1 week',
-    '2 weeks',
-    '1 month',
-    'More than a month',
-  ];
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _descriptionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(
-        bottom: MediaQuery.of(context).viewInsets.bottom,
-        left: 16,
-        right: 16,
-        top: 16,
-      ),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Handle bar
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 20),
-                decoration: BoxDecoration(
-                  color: Colors.grey[300],
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Title
-            Text(
-              'Add Symptom',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            const SizedBox(height: 24),
-
-            // Symptom name
-            TextFormField(
-              controller: _nameController,
-              decoration: InputDecoration(
-                labelText: 'Symptom Name',
-                hintText: 'e.g., Headache, Fever, Cough',
-                prefixIcon: const Icon(Icons.medical_services),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Please enter a symptom name';
-                }
-                return null;
-              },
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 16),
-
-            // Severity slider
-            Text(
-              'Severity: $_severity/10',
-              style: Theme.of(context).textTheme.titleMedium,
-            ),
-            Slider(
-              value: _severity.toDouble(),
-              min: 1,
-              max: 10,
-              divisions: 9,
-              label: '$_severity',
-              onChanged: (value) {
-                setState(() {
-                  _severity = value.round();
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Duration dropdown
-            DropdownButtonFormField<String>(
-              value: _duration,
-              decoration: InputDecoration(
-                labelText: 'Duration',
-                prefixIcon: const Icon(Icons.access_time),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              items: _commonDurations.map((duration) {
-                return DropdownMenuItem(
-                  value: duration,
-                  child: Text(duration),
-                );
-              }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  setState(() {
-                    _duration = value;
-                  });
-                }
-              },
-            ),
-            const SizedBox(height: 16),
-
-            // Optional description
-            TextFormField(
-              controller: _descriptionController,
-              decoration: InputDecoration(
-                labelText: 'Additional Details (Optional)',
-                hintText: 'Any other relevant information',
-                prefixIcon: const Icon(Icons.notes),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              maxLines: 3,
-              textCapitalization: TextCapitalization.sentences,
-            ),
-            const SizedBox(height: 24),
-
-            // Add button
-            ElevatedButton(
-              onPressed: _submitSymptom,
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              child: const Text(
-                'Add Symptom',
-                style: TextStyle(fontSize: 16),
-              ),
-            ),
-            const SizedBox(height: 16),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _submitSymptom() {
-    if (_formKey.currentState!.validate()) {
-      final symptom = Symptom(
-        name: _nameController.text.trim(),
-        severity: _severity,
-        duration: _duration,
-        description: _descriptionController.text.trim().isEmpty
-            ? null
-            : _descriptionController.text.trim(),
-      );
-
-      widget.onSymptomAdded(symptom);
-      Navigator.pop(context);
-    }
-  }
-}
-```
-
----
-
-## Step 7: Create Audio Recorder Widget
-
-Create `lib/widgets/audio_recorder_widget.dart`:
-
-```dart
-// lib/widgets/audio_recorder_widget.dart
-
-import 'dart:async';
-import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../services/audio_service.dart';
-import '../services/gemini_service.dart';
-
-class AudioRecorderWidget extends StatefulWidget {
-  final Function(String transcription) onTranscriptionComplete;
-
-  const AudioRecorderWidget({
-    super.key,
-    required this.onTranscriptionComplete,
-  });
-
-  @override
-  State<AudioRecorderWidget> createState() => _AudioRecorderWidgetState();
-}
-
-class _AudioRecorderWidgetState extends State<AudioRecorderWidget> {
-  final AudioService _audioService = AudioService();
-  bool _isRecording = false;
-  bool _isProcessing = false;
-  Duration _recordingDuration = Duration.zero;
-  Timer? _timer;
-
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _audioService.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Handle bar
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: 20),
-            decoration: BoxDecoration(
-              color: Colors.grey[300],
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-
-          // Title
-          Text(
-            _isRecording ? 'Recording...' : 'Voice Input',
-            style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 8),
-
-          Text(
-            _isRecording
-                ? 'Describe your symptoms'
-                : 'Tap the microphone to start',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.grey[600],
-                ),
-          ),
-          const SizedBox(height: 32),
-
-          // Recording animation
-          if (_isRecording) _buildRecordingAnimation(),
-
-          // Duration display
-          if (_isRecording)
-            Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Text(
-                _formatDuration(_recordingDuration),
-                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Colors.red,
-                    ),
-              ),
-            ),
-
-          const SizedBox(height: 24),
-
-          // Control buttons
-          if (_isProcessing)
-            const Column(
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 16),
-                Text('Processing audio...'),
-              ],
-            )
-          else
-            _buildControlButtons(),
-
-          const SizedBox(height: 16),
-
-          // Info text
-          if (!_isRecording && !_isProcessing)
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.blue.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.info_outline, color: Colors.blue[700], size: 20),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Speak clearly and describe your symptoms in detail',
-                      style: TextStyle(
-                        color: Colors.blue[700],
-                        fontSize: 12,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRecordingAnimation() {
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        // Pulsing circles
-        ...List.generate(3, (index) {
-          return TweenAnimationBuilder<double>(
-            tween: Tween(begin: 0.0, end: 1.0),
-            duration: Duration(milliseconds: 1500 + (index * 200)),
-            curve: Curves.easeOut,
-            builder: (context, value, child) {
-              return Container(
-                width: 120 + (value * 80 * index),
-                height: 120 + (value * 80 * index),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: Colors.red.withOpacity(0.1 * (1 - value)),
-                  border: Border.all(
-                    color: Colors.red.withOpacity(0.3 * (1 - value)),
-                    width: 2,
-                  ),
-                ),
-              );
-            },
-            onEnd: () {
-              if (_isRecording && mounted) {
-                setState(() {}); // Restart animation
-              }
-            },
-          );
-        }),
-
-        // Microphone icon
-        Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.red,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.red.withOpacity(0.3),
-                blurRadius: 20,
-                spreadRadius: 5,
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.mic,
-            color: Colors.white,
-            size: 50,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildControlButtons() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        // Cancel button (only when recording)
-        if (_isRecording)
-          ElevatedButton.icon(
-            onPressed: _cancelRecording,
-            icon: const Icon(Icons.close),
-            label: const Text('Cancel'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[300],
-              foregroundColor: Colors.black87,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 16,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-              ),
-            ),
-          ),
-
-        // Main action button
-        ElevatedButton.icon(
-          onPressed: _isRecording ? _stopRecording : _startRecording,
-          icon: Icon(_isRecording ? Icons.stop : Icons.mic),
-          label: Text(_isRecording ? 'Stop' : 'Start Recording'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _isRecording ? Colors.red : Colors.blue,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(
-              horizontal: 32,
-              vertical: 16,
-            ),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _startRecording() async {
-    try {
-      await _audioService.startRecording();
-      setState(() {
-        _isRecording = true;
-        _recordingDuration = Duration.zero;
-      });
-
-      // Start timer
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (mounted) {
-          setState(() {
-            _recordingDuration = Duration(seconds: timer.tick);
-          });
-        }
-      });
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _stopRecording() async {
-    try {
-      _timer?.cancel();
-
-      final audioPath = await _audioService.stopRecording();
-
-      if (audioPath == null) {
-        throw Exception('Failed to save recording');
-      }
-
-      setState(() {
-        _isRecording = false;
-        _isProcessing = true;
-      });
-
-      // Transcribe audio using Gemini
-      final geminiService = Provider.of<GeminiService>(context, listen: false);
-      final transcription = await geminiService.transcribeAudio(audioPath);
-
-      // Delete the audio file after transcription
-      await _audioService.deleteRecording(audioPath);
-
-      if (mounted) {
-        widget.onTranscriptionComplete(transcription);
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      setState(() {
-        _isProcessing = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _cancelRecording() async {
-    try {
-      _timer?.cancel();
-      await _audioService.cancelRecording();
-
-      setState(() {
-        _isRecording = false;
-        _recordingDuration = Duration.zero;
-      });
-
-      if (mounted) {
-        Navigator.pop(context);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    }
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
-  }
-}
-```
-
----
-
-## Step 8: Update Home Screen for Audio Input
-
-### Update Home Screen to Support Audio
-
-Update the `lib/screens/home_screen.dart` file to add audio recording capability:
-
-```dart
-// Add to the imports section
-import '../widgets/audio_recorder_widget.dart';
-
-// Update the FloatingActionButton section to include audio option
-@override
-Widget build(BuildContext context) {
-  return Scaffold(
-    appBar: AppBar(
-      title: const Text('AI Diagnosis Assistant'),
-      centerTitle: true,
-      elevation: 0,
-      actions: [
-        // Audio input button
-        IconButton(
-          onPressed: _showAudioRecorder,
-          icon: const Icon(Icons.mic),
-          tooltip: 'Voice Input',
-        ),
-      ],
-    ),
-    // ... rest of the build method
-    floatingActionButton: Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        // Voice input FAB
-        FloatingActionButton(
-          onPressed: _showAudioRecorder,
-          heroTag: 'voice',
-          child: const Icon(Icons.mic),
-          tooltip: 'Record symptoms',
-        ),
-        const SizedBox(height: 16),
-        // Add symptom FAB
-        FloatingActionButton.extended(
-          onPressed: _addSymptom,
-          heroTag: 'add',
-          icon: const Icon(Icons.add),
-          label: const Text('Add Symptom'),
-        ),
-      ],
-    ),
-  );
-}
-
-// Add this method to show the audio recorder
-void _showAudioRecorder() {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => AudioRecorderWidget(
-      onTranscriptionComplete: (transcription) {
-        // Show transcription and allow user to confirm
-        _showTranscriptionDialog(transcription);
-      },
-    ),
-  );
-}
-
-// Add this method to show transcription confirmation
-void _showTranscriptionDialog(String transcription) {
-  showDialog(
-    context: context,
-    builder: (context) => AlertDialog(
-      title: const Text('Voice Transcription'),
-      content: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Your symptoms have been transcribed:',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 12),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.grey[100],
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: Text(
-                transcription,
-                style: const TextStyle(fontSize: 14),
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Would you like to analyze these symptoms?',
-              style: TextStyle(fontSize: 13, color: Colors.grey),
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () {
-            Navigator.pop(context);
-            _analyzeVoiceSymptoms(transcription);
-          },
-          child: const Text('Analyze'),
-        ),
-      ],
-    ),
-  );
-}
-
-// Add this method to analyze voice-transcribed symptoms
-Future<void> _analyzeVoiceSymptoms(String transcription) async {
-  setState(() {
-    _isAnalyzing = true;
-  });
-
-  try {
-    final geminiService = Provider.of<GeminiService>(context, listen: false);
-
-    // Create a temporary audio path or use the transcription directly
-    // For now, we'll analyze the transcription as text
-    final prompt = '''
-You are a medical AI assistant. A patient has described their symptoms via voice:
-
-"$transcription"
-
-Please extract the symptoms and provide a structured assessment.
-
-**IMPORTANT DISCLAIMER:** This is NOT medical advice. Always consult a healthcare professional.
-
-**Please provide:**
-
-1. **Extracted Symptoms:** List the specific symptoms mentioned with estimated severity (1-10)
-
-2. **Possible Conditions:** List 2-3 possible conditions that match these symptoms
-
-3. **Urgency Level:** Rate as Low, Medium, High, or Emergency
-
-4. **Recommended Actions:** What should the person do next?
-
-5. **When to Seek Immediate Care:** Warning signs requiring emergency attention
-
-**Format your response clearly with these sections.**
+Provide only the JSON array in your response.
 ''';
 
-    final response = await geminiService.askFollowUp(prompt);
-    final result = DiagnosisResult.fromAIResponse(response);
+      final response = await _model.generateContent([
+        Content.multi([TextPart(prompt), audioPart]),
+      ]);
 
-    if (mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => DiagnosisScreen(
-            result: result,
-            symptoms: [], // Voice symptoms don't have structured Symptom objects
-          ),
-        ),
-      );
+      final text = response.text;
+      if (text == null || text.isEmpty) {
+        throw Exception('Failed to extract symptoms: Empty response from AI.');
+      }
+
+      // Clean the response to ensure it's valid JSON
+      final jsonString = text.replaceAll('```json', '').replaceAll('```', '').trim();
+
+      final decoded = json.decode(jsonString) as List;
+      return decoded
+          .map((s) => Symptom.fromJson(s as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to extract symptoms from audio: $e');
     }
-  } catch (e) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    }
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isAnalyzing = false;
-      });
-    }
-  }
+
 }
-```
 
----
+````
 
----
+### 3.5 Implement Follow-up Questions
 
-## Step 9: Create Diagnosis Screen
+Finally, implement the `askFollowUp` method. This uses the `_chatSession` to maintain conversational context, allowing the user to ask questions about their diagnosis.
 
-Create `lib/screens/diagnosis_screen.dart`:
+Add this method to your `GeminiService` class:
 
 ```dart
-// lib/screens/diagnosis_screen.dart
-
-import 'package:flutter/material.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
-import 'package:provider/provider.dart';
-import '../models/diagnosis_result.dart';
-import '../models/symptom.dart';
-import '../services/gemini_service.dart';
-
-class DiagnosisScreen extends StatefulWidget {
-  final DiagnosisResult result;
-  final List<Symptom> symptoms;
-
-  const DiagnosisScreen({
-    super.key,
-    required this.result,
-    required this.symptoms,
-  });
-
-  @override
-  State<DiagnosisScreen> createState() => _DiagnosisScreenState();
-}
-
-class _DiagnosisScreenState extends State<DiagnosisScreen> {
-  final _questionController = TextEditingController();
-  final List<ChatMessage> _messages = [];
-  bool _isLoading = false;
-
-  @override
-  void initState() {
-    super.initState();
-    // Add initial AI response as a message
-    _messages.add(ChatMessage(
-      text: widget.result.additionalNotes,
-      isUser: false,
-      timestamp: widget.result.timestamp,
-    ));
-  }
-
-  @override
-  void dispose() {
-    _questionController.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Diagnosis Results'),
-        elevation: 0,
-      ),
-      body: Column(
-        children: [
-          // Results summary
-          _buildResultsSummary(),
-
-          // Chat messages
-          Expanded(
-            child: _buildChatSection(),
-          ),
-
-          // Question input
-          _buildQuestionInput(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildResultsSummary() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: _getUrgencyColor(widget.result.urgencyLevel).withOpacity(0.1),
-        border: Border(
-          bottom: BorderSide(
-            color: _getUrgencyColor(widget.result.urgencyLevel),
-            width: 3,
-          ),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Urgency badge
-          Row(
-            children: [
-              Icon(
-                _getUrgencyIcon(widget.result.urgencyLevel),
-                color: _getUrgencyColor(widget.result.urgencyLevel),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Urgency: ${widget.result.urgencyLevel}',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: _getUrgencyColor(widget.result.urgencyLevel),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Symptoms summary
-          Text(
-            'Analyzed Symptoms:',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: widget.symptoms.map((symptom) {
-              return Chip(
-                label: Text(symptom.name),
-                avatar: CircleAvatar(
-                  backgroundColor: _getSeverityColor(symptom.severity),
-                  child: Text(
-                    '${symptom.severity}',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChatSection() {
-    return Container(
-      color: Colors.grey[100],
-      child: ListView.builder(
-        padding: const EdgeInsets.all(16),
-        reverse: true,
-        itemCount: _messages.length,
-        itemBuilder: (context, index) {
-          final message = _messages[_messages.length - 1 - index];
-          return _buildMessageBubble(message);
-        },
-      ),
-    );
-  }
-
-  Widget _buildMessageBubble(ChatMessage message) {
-    return Align(
-      alignment: message.isUser ? Alignment.centerRight : Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(12),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: message.isUser
-              ? Theme.of(context).colorScheme.primary
-              : Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            message.isUser
-                ? Text(
-                    message.text,
-                    style: const TextStyle(color: Colors.white),
-                  )
-                : MarkdownBody(
-                    data: message.text,
-                    styleSheet: MarkdownStyleSheet(
-                      p: const TextStyle(fontSize: 14),
-                    ),
-                  ),
-            const SizedBox(height: 4),
-            Text(
-              _formatTime(message.timestamp),
-              style: TextStyle(
-                fontSize: 10,
-                color: message.isUser
-                    ? Colors.white.withOpacity(0.7)
-                    : Colors.grey[600],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuestionInput() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, -5),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _questionController,
-              decoration: InputDecoration(
-                hintText: 'Ask a follow-up question...',
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-              ),
-              textCapitalization: TextCapitalization.sentences,
-              enabled: !_isLoading,
-            ),
-          ),
-          const SizedBox(width: 8),
-          IconButton(
-            onPressed: _isLoading ? null : _sendQuestion,
-            icon: _isLoading
-                ? const SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : const Icon(Icons.send),
-            style: IconButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _sendQuestion() async {
-    final question = _questionController.text.trim();
-    if (question.isEmpty) return;
-
-    // Add user message
-    setState(() {
-      _messages.add(ChatMessage(
-        text: question,
-        isUser: true,
-        timestamp: DateTime.now(),
-      ));
-      _isLoading = true;
-    });
-
-    _questionController.clear();
-
+  /// Asks a follow-up question about the diagnosis
+  Future<String> askFollowUp(String question) async {
     try {
-      final geminiService = Provider.of<GeminiService>(context, listen: false);
-      final response = await geminiService.askFollowUp(question);
-
-      setState(() {
-        _messages.add(ChatMessage(
-          text: response,
-          isUser: false,
-          timestamp: DateTime.now(),
-        ));
-      });
+      final response = await _chatSession.sendMessage(Content.text(question));
+      return response.text ?? 'No response generated';
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: ${e.toString()}'),
-          backgroundColor: Colors.red,
-        ),
-      );
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      throw Exception('Failed to process follow-up: $e');
     }
   }
-
-  Color _getUrgencyColor(String urgency) {
-    switch (urgency.toLowerCase()) {
-      case 'emergency':
-        return Colors.red[700]!;
-      case 'high':
-        return Colors.orange[700]!;
-      case 'medium':
-        return Colors.yellow[700]!;
-      case 'low':
-        return Colors.green[700]!;
-      default:
-        return Colors.grey[700]!;
-    }
-  }
-
-  IconData _getUrgencyIcon(String urgency) {
-    switch (urgency.toLowerCase()) {
-      case 'emergency':
-        return Icons.emergency;
-      case 'high':
-        return Icons.warning;
-      case 'medium':
-        return Icons.info;
-      case 'low':
-        return Icons.check_circle;
-      default:
-        return Icons.help;
-    }
-  }
-
-  Color _getSeverityColor(int severity) {
-    if (severity <= 3) return Colors.green;
-    if (severity <= 6) return Colors.orange;
-    return Colors.red;
-  }
-
-  String _formatTime(DateTime timestamp) {
-    final now = DateTime.now();
-    final difference = now.difference(timestamp);
-
-    if (difference.inMinutes < 1) return 'Just now';
-    if (difference.inMinutes < 60) return '${difference.inMinutes}m ago';
-    if (difference.inHours < 24) return '${difference.inHours}h ago';
-    return '${timestamp.hour}:${timestamp.minute.toString().padLeft(2, '0')}';
-  }
-}
-
-class ChatMessage {
-  final String text;
-  final bool isUser;
-  final DateTime timestamp;
-
-  ChatMessage({
-    required this.text,
-    required this.isUser,
-    required this.timestamp,
-  });
-}
 ```
+
+Your `GeminiService` is now fully implemented! The rest of the app's UI will now work with the live AI service.
 
 ---
 
-## Step 10: Testing Your App
+## Step 4: Run the App and Test
 
-### 10.1 Run the Application
+Since the UI is already built in the starter project, and you've now implemented the core AI logic, the app is ready to be tested!
+
+### 4.1 Run the Application
 
 ```bash
 flutter run
 ```
 
-### 10.2 Test Cases to Try
+### 4.2 Test Cases to Try
 
 **Test Case 1: Simple Symptoms (Text Input)**
 
+- Tap the "Add Symptom" button.
 - Add: "Headache" (Severity: 7, Duration: 2 days)
 - Add: "Fever" (Severity: 6, Duration: 2 days)
-- Expected: Common cold or flu
+- Tap "Analyze Symptoms".
+- **Expected:** The app should display a diagnosis related to a common cold or flu with "Low" urgency.
 
 **Test Case 2: Emergency Symptoms (Text Input)**
 
 - Add: "Chest pain" (Severity: 9, Duration: 1 hour)
 - Add: "Difficulty breathing" (Severity: 8, Duration: 30 minutes)
-- Expected: High/Emergency urgency
+- Tap "Analyze Symptoms".
+- **Expected:** The app should display a "High" or "Emergency" urgency level.
 
 **Test Case 3: Voice Input**
 
-- Tap microphone button
-- Record: "I've been having a severe headache for the past two days, along with a fever and body aches"
-- Verify transcription accuracy
-- Expected: Flu-like symptoms analysis
+- Tap the microphone button.
+- Record: "I've been having a severe headache for the past two days, along with a fever and body aches."
+- **Expected:** The app should process the audio and add the extracted symptoms to the list. You can then tap "Analyze Symptoms".
 
 **Test Case 4: Follow-up Questions**
 
-- After diagnosis, ask: "What over-the-counter medication can I take?"
-- Ask: "When should I see a doctor?"
+- After getting a diagnosis, ask a follow-up question in the chat interface, such as: "What over-the-counter medication can I take?"
+- **Expected:** The AI should provide a relevant answer based on the context of the diagnosis.
 
-### 10.3 Verify Key Features
+### 4.3 Verify Key Features
 
-✅ Symptoms can be added and removed  
-✅ Severity slider works correctly  
-✅ Audio recording works with proper permissions  
-✅ Audio is transcribed accurately  
-✅ AI analysis provides structured response  
-✅ Follow-up questions maintain context  
-✅ Error handling works (try with no internet)  
-✅ UI is responsive and intuitive  
-✅ Recording timer displays correctly  
-✅ Audio files are cleaned up after use
+✅ Symptoms can be added, edited, and removed.  
+✅ Audio recording works and extracts symptoms correctly.  
+✅ AI analysis provides a structured response.  
+✅ Follow-up questions maintain context.  
+✅ Error handling works (try analyzing with no internet).  
+✅ The UI is responsive and intuitive.
 
 ---
 
-## Step 11: Error Handling & Edge Cases
+## Step 5: Error Handling & Edge Cases
 
-### 11.1 Add Network Error Handling
+### 5.1 Add Network Error Handling
 
-Update `GeminiService` to handle common errors:
+The `analyzeSymptoms` method you implemented already includes timeout and API error handling. This is a great start for building a robust app.
 
 ```dart
-// Add to lib/services/gemini_service.dart
+// From lib/services/gemini_service.dart
 
-Future<DiagnosisResult> analyzeSymptoms(List<Symptom> symptoms) async {
-  try {
-    final prompt = _buildDiagnosisPrompt(symptoms);
-
-    final response = await _chatSession.sendMessage(
-      Content.text(prompt),
-    ).timeout(
-      const Duration(seconds: 30),
-      onTimeout: () {
-        throw Exception('Request timed out. Please check your internet connection.');
-      },
-    );
-
-    final aiResponse = response.text ?? 'No response generated';
-
-    if (aiResponse.isEmpty) {
-      throw Exception('Received empty response from AI');
-    }
-
-    return DiagnosisResult.fromAIResponse(aiResponse);
-  } on GenerativeAIException catch (e) {
-    // Handle API-specific errors
-    if (e.message.contains('API key')) {
-      throw Exception('Invalid API key. Please check your configuration.');
-    } else if (e.message.contains('quota')) {
-      throw Exception('API quota exceeded. Please try again later.');
-    } else {
-      throw Exception('AI service error: ${e.message}');
-    }
-  } catch (e) {
-    throw Exception('Failed to analyze symptoms: $e');
+} on GenerativeAIException catch (e) {
+  // Handle API-specific errors
+  if (e.message.contains('API key')) {
+    throw Exception('Invalid API key. Please check your configuration.');
+  } else if (e.message.contains('quota')) {
+    throw Exception('API quota exceeded. Please try again later.');
+  } else {
+    throw Exception('AI service error: ${e.message}');
   }
+} catch (e) {
+  throw Exception('Failed to analyze symptoms: $e');
 }
 ```
 
-### 11.2 Add Input Validation
+### 5.2 Input Validation
 
-Update `SymptomInputWidget` to validate inputs more thoroughly:
+The starter project already includes form validation in the `SymptomInputWidget`. You can review it in `lib/widgets/symptom_input_widget.dart`.
 
-```dart
-// Update validator in symptom_input_widget.dart
+### 5.3 Audio-Specific Error Handling
 
-validator: (value) {
-  if (value == null || value.trim().isEmpty) {
-    return 'Please enter a symptom name';
-  }
-  if (value.trim().length < 2) {
-    return 'Symptom name too short';
-  }
-  if (value.trim().length > 100) {
-    return 'Symptom name too long';
-  }
-  return null;
-},
-```
-
-### 11.3 Add Audio-Specific Error Handling
-
-Add comprehensive error handling for audio operations:
-
-```dart
-// Add to audio_service.dart
-
-/// Validates audio file before processing
-Future<bool> validateAudioFile(String path) async {
-  try {
-    final file = File(path);
-
-    // Check if file exists
-    if (!await file.exists()) {
-      throw Exception('Audio file not found');
-    }
-
-    // Check file size (max 10MB for Gemini)
-    final size = await file.length();
-    if (size == 0) {
-      throw Exception('Audio file is empty');
-    }
-    if (size > 10 * 1024 * 1024) {
-      throw Exception('Audio file too large (max 10MB)');
-    }
-
-    return true;
-  } catch (e) {
-    return false;
-  }
-}
-```
-
-Add retry logic for transcription:
-
-```dart
-// Add to gemini_service.dart
-
-/// Transcribes audio with retry logic
-Future<String> transcribeAudioWithRetry(
-  String audioPath, {
-  int maxRetries = 3,
-}) async {
-  int attempts = 0;
-  Exception? lastError;
-
-  while (attempts < maxRetries) {
-    try {
-      return await transcribeAudio(audioPath);
-    } catch (e) {
-      lastError = e as Exception;
-      attempts++;
-
-      if (attempts < maxRetries) {
-        // Wait before retry (exponential backoff)
-        await Future.delayed(Duration(seconds: attempts * 2));
-      }
-    }
-  }
-
-  throw lastError ?? Exception('Failed after $maxRetries attempts');
-}
-```
+The provided `AudioService` in `lib/services/audio_service.dart` already contains robust error handling for permissions and recording operations.
 
 ---
 
-## Step 12: Using Flutter AI Toolkit (Optional Enhancement)
+## Step 6: Deployment Considerations
 
-### 12.1 Add AI Toolkit Chat Interface
+### 6.1 Security Best Practices
 
-The `flutter_ai_toolkit` package provides pre-built chat components. Let's integrate it:
-
-```dart
-// Alternative implementation using flutter_ai_toolkit
-// Create lib/screens/ai_chat_screen.dart
-
-import 'package:flutter/material.dart';
-import 'package:flutter_ai_toolkit/flutter_ai_toolkit.dart';
-import 'package:google_generative_ai/google_generative_ai.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
-
-class AIChatScreen extends StatelessWidget {
-  const AIChatScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('AI Chat Assistant'),
-      ),
-      body: LlmChatView(
-        provider: GeminiProvider(
-          model: GenerativeModel(
-            model: 'gemini-1.5-flash',
-            apiKey: dotenv.env['GEMINI_API_KEY']!,
-          ),
-        ),
-        welcomeMessage: 'Hello! I\'m your AI health assistant. '
-            'Describe your symptoms and I\'ll provide a preliminary assessment. '
-            'Remember, this is not medical advice.',
-      ),
-    );
-  }
-}
-```
-
-### 12.2 Add Navigation to AI Chat
-
-Update `HomeScreen` to include a button to access the AI chat:
-
-```dart
-// Add to home_screen.dart appBar actions
-
-actions: [
-  IconButton(
-    icon: const Icon(Icons.chat),
-    onPressed: () {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const AIChatScreen(),
-        ),
-      );
-    },
-    tooltip: 'Open AI Chat',
-  ),
-],
-```
-
----
-
-## Step 13: Deployment Considerations
-
-### 13.1 Security Best Practices
-
-**❌ Never commit your API key to Git:**
-
-```bash
-# Ensure .env is in .gitignore
-echo ".env" >> .gitignore
-git add .gitignore
-git commit -m "Add .env to gitignore"
-```
+**❌ Never commit your API key to Git.** The starter project's `.gitignore` is already configured to ignore the `.env` file.
 
 **✅ For production, use a backend proxy:**
 
-```dart
+```
 // Production architecture (recommended)
 //
 // Flutter App → Your Backend API → Gemini API
 //
-// This keeps your API key secure on the server
+// This keeps your API key secure on the server.
 ```
 
-### 13.2 Add Loading States
+### 6.2 Loading States
 
-Improve user experience with better loading indicators:
-
-```dart
-// Example: Add skeleton loading in diagnosis_screen.dart
-
-Widget _buildLoadingState() {
-  return ListView.builder(
-    padding: const EdgeInsets.all(16),
-    itemCount: 3,
-    itemBuilder: (context, index) {
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12),
-        child: Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            height: 60,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        ),
-      );
-    },
-  );
-}
-```
-
-### 13.3 Add Analytics (Optional)
-
-Track app usage for improvements:
-
-```yaml
-# Add to pubspec.yaml
-dependencies:
-  firebase_analytics: ^11.3.3
-```
-
-### 13.4 Audio File Management
-
-Implement automatic cleanup of old recordings:
-
-```dart
-// Add to audio_service.dart
-
-/// Cleans up old recording files
-Future<void> cleanupOldRecordings({Duration maxAge = const Duration(hours: 24)}) async {
-  try {
-    final directory = await getApplicationDocumentsDirectory();
-    final files = directory.listSync();
-    final now = DateTime.now();
-
-    for (final file in files) {
-      if (file.path.contains('recording_') && file is File) {
-        final stat = await file.stat();
-        final age = now.difference(stat.modified);
-
-        if (age > maxAge) {
-          await file.delete();
-        }
-      }
-    }
-  } catch (e) {
-    // Log error but don't throw
-    print('Failed to cleanup recordings: $e');
-  }
-}
-```
+The starter project already includes loading indicators for a better user experience. You can see them in `home_screen.dart` when the `_isAnalyzing` state is true.
 
 ---
 
-## Step 14: Congratulations! 🎉
+## Step 7: Congratulations! 🎉
 
 ### What You've Built
 
@@ -2738,40 +760,6 @@ You've successfully created an AI-powered diagnosis app with:
 
 ---
 
-## Feedback & Support
-
-**Found a bug?** Open an issue on GitHub  
-**Have questions?** Join our Discord community  
-**Want to share your app?** Tag us on Twitter with #FlutterAI
-
----
-
-## Legal Disclaimer
-
-**⚠️ IMPORTANT LEGAL NOTICE**
-
-This application is a **demonstration and educational tool only**. It is NOT intended for:
-
-- Actual medical diagnosis
-- Treatment recommendations
-- Emergency medical situations
-
-**For real healthcare applications:**
-
-- Obtain proper regulatory approvals (FDA, CE marking, etc.)
-- Implement HIPAA/GDPR compliance
-- Have medical professionals review content
-- Include appropriate disclaimers
-- Get legal counsel
-
-**Users should:**
-
-- Always consult qualified healthcare professionals
-- Seek emergency care for serious symptoms
-- Not rely solely on AI for medical decisions
-
----
-
 ## License
 
 This codelab is released under the MIT License.
@@ -2809,12 +797,6 @@ SOFTWARE.
 - Google Developer Expert in Flutter
 - Senior Software Engineer Full Stack
 - AI & Mobile Development Trainer
-
-Connect with me:
-
-- LinkedIn: [Your LinkedIn]
-- GitHub: [Your GitHub]
-- Twitter: [Your Twitter]
 
 ---
 

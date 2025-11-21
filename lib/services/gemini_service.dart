@@ -309,6 +309,6 @@ $symptomsList
 
   /// Disposes resources
   void dispose() {
-    // Clean up if needed
+    // Clean up
   }
 }
