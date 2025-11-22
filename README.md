@@ -72,7 +72,6 @@ lib/
 ├── services/                 # Business logic and external communication
 │   ├── audio_service.dart
 │   ├── gemini_service.dart
-│   └── gemini_mock_service.dart
 └── widgets/                  # Reusable UI components
     ├── audio_recorder_widget.dart
     └── symptom_input_widget.dart
