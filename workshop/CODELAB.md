@@ -302,7 +302,7 @@ class GeminiService {
 
     // Use gemini-1.5-flash for faster, cost-effective responses
     _model = GenerativeModel(
-      model: 'gemini-1.5-flash-preview-0527',
+      model: 'gemini-2.5-flash-preview-09-2025',
       apiKey: apiKey,
       generationConfig: GenerationConfig(
         temperature: 0.7, // Balanced creativity and accuracy
@@ -325,6 +325,11 @@ class GeminiService {
 
   void dispose() {
     // Clean up if needed
+  }
+
+  /// Resets the chat session
+  void resetChat() {
+    _chatSession = _model.startChat(history: []);
   }
 }
 ```
@@ -426,7 +431,7 @@ Add this method to your `GeminiService` class:
       // Create audio content
       final audioPart = DataPart('audio/mp4', audioBytes);
 
-      // Send to Gemini with a prompt that asks for JSON output
+      // Send to Gemini with prompt
       final prompt = '''
 You are an expert medical assistant AI. A patient has recorded their symptoms.
 Listen to the audio and extract the symptoms into a structured JSON format.
@@ -448,6 +453,12 @@ Listen to the audio and extract the symptoms into a structured JSON format.
     "severity": 7,
     "duration": "2 days",
     "description": "Sharp pain behind the eyes."
+  },
+  {
+    "name": "Fever",
+    "severity": 6,
+    "duration": "1 day",
+    "description": "Feeling hot and cold."
   }
 ]
 ```
@@ -465,7 +476,10 @@ Provide only the JSON array in your response.
       }
 
       // Clean the response to ensure it's valid JSON
-      final jsonString = text.replaceAll('```json', '').replaceAll('```', '').trim();
+      final jsonString = text
+          .replaceAll('```json', '')
+          .replaceAll('```', '')
+          .trim();
 
       final decoded = json.decode(jsonString) as List;
       return decoded
@@ -474,8 +488,7 @@ Provide only the JSON array in your response.
     } catch (e) {
       throw Exception('Failed to extract symptoms from audio: $e');
     }
-
-}
+  }
 
 ````
 

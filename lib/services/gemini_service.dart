@@ -3,46 +3,6 @@ import '../models/symptom.dart';
 import '../models/diagnosis_result.dart';
 
 class GeminiService {
-  /// Analyzes symptoms and returns a diagnosis (basic mock)
-  Future<DiagnosisResult> analyzeSymptomsbasic(List<Symptom> symptoms) async {
-    await Future.delayed(const Duration(seconds: 2));
-    return DiagnosisResult.fromAIResponse('''
-      **Possible Conditions:**
-      - Mock Condition 1
-      - Mock Condition 2
-
-      **Urgency Level:** Medium
-
-      **Recommended Actions:**
-      - This is a mock recommendation.
-      ''');
-  }
-
-  /// Transcribes audio to text using Gemini (mock)
-  Future<String> transcribeAudio(String audioPath) async {
-    await Future.delayed(const Duration(seconds: 2));
-    return 'This is a mock transcription of the audio file.';
-  }
-
-  /// Analyzes symptoms from audio transcription (mock)
-  Future<DiagnosisResult> analyzeSymptomsFromAudio(String audioPath) async {
-    await Future.delayed(const Duration(seconds: 3));
-    final transcription = await transcribeAudio(audioPath);
-    return DiagnosisResult.fromAIResponse('''
-      **Transcription:**
-      $transcription
-
-      **Possible Conditions:**
-      - Mock Audio Condition 1
-      - Mock Audio Condition 2
-
-      **Urgency Level:** High
-
-      **Recommended Actions:**
-      - This is a mock recommendation based on audio.
-      ''');
-  }
-
   /// Extracts symptoms from an audio file
   Future<List<Symptom>> extractSymptomsFromAudio(String audioPath) async {
     // Simulate network delay
@@ -93,15 +53,6 @@ class GeminiService {
     // Simulate network delay
     await Future.delayed(const Duration(seconds: 1));
     return 'This is a mock response to your follow-up question: "$question". In a real app, I would provide a more detailed answer.';
-  }
-
-  /// Transcribes audio with retry logic (mock)
-  Future<String> transcribeAudioWithRetry(
-    String audioPath, {
-    int maxRetries = 3,
-  }) async {
-    await Future.delayed(const Duration(seconds: 1));
-    return 'This is a mock transcription with retry logic.';
   }
 
   /// Resets the chat session (mock)
